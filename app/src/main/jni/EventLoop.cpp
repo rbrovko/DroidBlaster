@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "EventLoop.hpp"
 #include "Log.hpp"
-#include "../../../../../../../tools/Android/android-sdk-macosx/ndk-bundle/sources/android/native_app_glue/android_native_app_glue.h"
 
 EventLoop::EventLoop(android_app *pApplication,
                      ActivityHandler &pActivityHandler):
@@ -93,11 +92,13 @@ void EventLoop::processAppEvent(int32_t pCommand) {
             break;
 
         case APP_CMD_GAINED_FOCUS:
+            activate();
             mActivityHandler.onGainFocus();
             break;
 
         case APP_CMD_LOST_FOCUS:
             mActivityHandler.onLostFocus();
+            deactivate();
             break;
 
         case APP_CMD_LOW_MEMORY:
@@ -106,6 +107,7 @@ void EventLoop::processAppEvent(int32_t pCommand) {
 
         case APP_CMD_PAUSE:
             mActivityHandler.onPause();
+            deactivate();
             break;
 
         case APP_CMD_RESUME:
@@ -126,6 +128,7 @@ void EventLoop::processAppEvent(int32_t pCommand) {
 
         case APP_CMD_TERM_WINDOW:
             mActivityHandler.onDestroyWindow();
+            deactivate();
             break;
 
         default:

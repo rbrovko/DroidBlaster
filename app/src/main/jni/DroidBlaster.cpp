@@ -7,9 +7,17 @@
 
 #include <unistd.h>
 
+static const int32_t SHIP_SIZE = 64;
+
 DroidBlaster::DroidBlaster(android_app *pApplication):
-        mEventLoop(pApplication, *this) {
+        mGraphicsManager(pApplication),
+        mEventLoop(pApplication, *this),
+        mShip(pApplication, mGraphicsManager) {
+
     Log::info("Creating DroidBlaster");
+
+    GraphicsElement *shipGraphics = mGraphicsManager.registerElement(SHIP_SIZE, SHIP_SIZE);
+    mShip.registerShip(shipGraphics);
 }
 
 void DroidBlaster::run() {
@@ -19,6 +27,14 @@ void DroidBlaster::run() {
 status DroidBlaster::onActivate() {
     Log::info("Activating DroidBlaster");
 
+    // Starts managers
+    if (mGraphicsManager.start() != STATUS_OK) {
+        return STATUS_KO;
+    }
+
+    // Initializes game objects
+    mShip.initialize();
+
     return STATUS_OK;
 }
 
@@ -27,11 +43,7 @@ void DroidBlaster::onDeactivate() {
 }
 
 status DroidBlaster::onStep() {
-    Log::info("Starting step");
-    usleep(300000);
-    Log::info("Stepping done");
-
-    return STATUS_OK;
+    return mGraphicsManager.update();
 }
 
 void DroidBlaster::onStart() {

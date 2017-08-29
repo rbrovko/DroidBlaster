@@ -7,6 +7,8 @@
 
 #include "ActivityHandler.hpp"
 #include "EventLoop.hpp"
+#include "GraphicsManager.hpp"
+#include "Ship.hpp"
 #include "Types.hpp"
 
 class DroidBlaster : public ActivityHandler {
@@ -38,7 +40,10 @@ private:
     DroidBlaster(const DroidBlaster&);
     void operator=(const DroidBlaster&);
 
+    GraphicsManager mGraphicsManager;
     EventLoop mEventLoop;
+
+    Ship mShip;
 };
 
 
