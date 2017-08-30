@@ -8,16 +8,28 @@
 #include <unistd.h>
 
 static const int32_t SHIP_SIZE = 64;
+static const int32_t ASTEROID_COUNT = 16;
+static const int32_t ASTEROID_SIZE = 64;
 
 DroidBlaster::DroidBlaster(android_app *pApplication):
+        mTimeManager(),
         mGraphicsManager(pApplication),
+        mPhysicsManager(mTimeManager, mGraphicsManager),
         mEventLoop(pApplication, *this),
-        mShip(pApplication, mGraphicsManager) {
+
+        mShip(pApplication, mGraphicsManager),
+        mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager) {
 
     Log::info("Creating DroidBlaster");
 
     GraphicsElement *shipGraphics = mGraphicsManager.registerElement(SHIP_SIZE, SHIP_SIZE);
     mShip.registerShip(shipGraphics);
+
+    // Creates asteroids
+    for (int32_t i = 0; i < ASTEROID_COUNT; ++i) {
+        GraphicsElement *asteroidGraphics = mGraphicsManager.registerElement(ASTEROID_SIZE, ASTEROID_SIZE);
+        mAsteroids.registerAsteroid(asteroidGraphics->location, ASTEROID_SIZE, ASTEROID_SIZE);
+    }
 }
 
 void DroidBlaster::run() {
@@ -34,6 +46,9 @@ status DroidBlaster::onActivate() {
 
     // Initializes game objects
     mShip.initialize();
+    mAsteroids.initialize();
+
+    mTimeManager.reset();
 
     return STATUS_OK;
 }
@@ -43,6 +58,12 @@ void DroidBlaster::onDeactivate() {
 }
 
 status DroidBlaster::onStep() {
+    mTimeManager.update();
+    mPhysicsManager.update();
+
+    // updates models
+    mAsteroids.update();
+
     return mGraphicsManager.update();
 }
 

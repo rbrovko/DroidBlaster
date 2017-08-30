@@ -8,7 +8,10 @@
 #include "ActivityHandler.hpp"
 #include "EventLoop.hpp"
 #include "GraphicsManager.hpp"
+#include "PhysicsManager.hpp"
+#include "TimeManager.hpp"
 #include "Ship.hpp"
+#include "Asteroid.hpp"
 #include "Types.hpp"
 
 class DroidBlaster : public ActivityHandler {
@@ -41,9 +44,12 @@ private:
     void operator=(const DroidBlaster&);
 
     GraphicsManager mGraphicsManager;
+    TimeManager mTimeManager;
+    PhysicsManager mPhysicsManager;
     EventLoop mEventLoop;
 
     Ship mShip;
+    Asteroid mAsteroids;
 };
 
 

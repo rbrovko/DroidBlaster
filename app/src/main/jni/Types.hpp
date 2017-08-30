@@ -5,7 +5,7 @@
 #ifndef DROIDBLASTER_TYPES_HPP
 #define DROIDBLASTER_TYPES_HPP
 
-#include <stdint.h>
+#include <cstdlib>
 
 typedef int32_t status;
 
