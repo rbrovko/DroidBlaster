@@ -8,6 +8,8 @@
 #include "Types.hpp"
 
 #include <android_native_app_glue.h>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
 
 struct GraphicsElement {
     GraphicsElement(int32_t pWidth, int32_t pHeight) :
@@ -35,6 +37,7 @@ public:
     GraphicsElement* registerElement(int32_t pHeight, int32_t pWidth);
 
     status start();
+    void stop();
     status update();
 
 private:
@@ -42,6 +45,11 @@ private:
 
     int32_t mRenderWidth;
     int32_t mRenderHeight;
+
+    EGLDisplay mDisplay;
+    EGLSurface mSurface;
+    EGLContext mContext;
+
     GraphicsElement* mElements[1024];
     int32_t mElementCount;
 };

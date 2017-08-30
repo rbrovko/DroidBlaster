@@ -3,7 +3,6 @@
 //
 
 #include "Asteroid.hpp"
-#include "Log.hpp"
 
 static const float BOUNDS_MARGIN = 128;
 static const float MIN_VELOCITY = 150.0f, VELOCITY_RANGE = 600.0f;
