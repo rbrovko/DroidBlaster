@@ -46,7 +46,7 @@ status GraphicsManager::start() {
     };
     // Request an OpenGL ES 2 context
     const EGLint CONTEXT_ATTRIBS[] = {
-            EGL_CONTEXT_CLIENT_TYPE, 2,
+            EGL_CONTEXT_CLIENT_VERSION, 2,
             EGL_NONE
     };
 
@@ -139,59 +139,16 @@ void GraphicsManager::stop() {
 }
 
 status GraphicsManager::update() {
-    // Locks the window buffer and draws on it
-    ANativeWindow_Buffer windowBuffer;
-    if (ANativeWindow_lock(mApplication->window, &windowBuffer, NULL) < 0) {
-        Log::error("Error while starting GraphicsManager");
+    static float clearColor = 0.0f;
+    clearColor += 0.001f;
+    glClearColor(clearColor, clearColor, clearColor, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
+    // Shows the result to the user
+    if (eglSwapBuffers(mDisplay, mSurface) != EGL_TRUE) {
+        Log::error("Error %d swapping buffers", eglGetError());
         return STATUS_KO;
     }
-
-    // Clears the window
-    memset(windowBuffer.bits, 0, windowBuffer.stride * windowBuffer.height * sizeof(uint32_t *));
-
-    // Renders graphic elements
-    int32_t maxX = windowBuffer.width - 1;
-    int32_t maxY = windowBuffer.height - 1;
-    for (int32_t i = 0; i < mElementCount; ++i) {
-        GraphicsElement *element = mElements[i];
-
-        // Computes coordinates
-        int32_t leftX = element->location.x - element->width / 2;
-        int32_t rightX = element->location.x + element->width / 2;
-        int32_t leftY = windowBuffer.height - element->location.y - element->height / 2;
-        int32_t rightY = windowBuffer.height - element->location.y + element->height / 2;
-
-        // Clips coordinates
-        if (rightX < 0 || leftX > maxX ||
-                rightY < 0 || leftY > maxY) {
-            continue;
-        }
-
-        if (leftX < 0) {
-            leftX = 0;
-        } else if (rightX > maxX) {
-            rightX = maxX;
-        }
-
-        if (leftY < 0) {
-            leftY = 0;
-        } else if (rightY > maxY) {
-            rightY = maxY;
-        }
-
-        // Draws a rectangle
-        uint32_t *line = (uint32_t *)(windowBuffer.bits) + (windowBuffer.stride * leftY);
-        for (int iY = leftY; iY <= rightY; iY++) {
-            for (int iX = leftX; iX <= rightX; iX++) {
-                line[iX] = 0X000000FF; // red color
-            }
-            line = line + windowBuffer.stride;
-        }
-    }
-
-    // Finshed drawing
-    ANativeWindow_unlockAndPost(mApplication->window);
 
     return STATUS_OK;
 }
