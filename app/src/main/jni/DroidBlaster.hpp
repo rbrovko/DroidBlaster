@@ -10,9 +10,11 @@
 #include "GraphicsManager.hpp"
 #include "PhysicsManager.hpp"
 #include "TimeManager.hpp"
+#include "Resource.hpp"
 #include "Ship.hpp"
 #include "Asteroid.hpp"
 #include "Types.hpp"
+
 
 class DroidBlaster : public ActivityHandler {
 public:
@@ -47,6 +49,9 @@ private:
     TimeManager mTimeManager;
     PhysicsManager mPhysicsManager;
     EventLoop mEventLoop;
+
+    Resource mAsteroidTexture;
+    Resource mShipTexture;
 
     Ship mShip;
     Asteroid mAsteroids;

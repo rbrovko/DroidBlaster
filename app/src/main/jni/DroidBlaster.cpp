@@ -17,6 +17,9 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mPhysicsManager(mTimeManager, mGraphicsManager),
         mEventLoop(pApplication, *this),
 
+        mAsteroidTexture(pApplication, "droidblaster/asteroid.png"),
+        mShipTexture(pApplication, "droidblaster/ship.png"),
+
         mShip(pApplication, mGraphicsManager),
         mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager) {
 
@@ -43,6 +46,8 @@ status DroidBlaster::onActivate() {
     if (mGraphicsManager.start() != STATUS_OK) {
         return STATUS_KO;
     }
+    mGraphicsManager.loadTexture(mAsteroidTexture);
+    mGraphicsManager.loadTexture(mShipTexture);
 
     // Initializes game objects
     mShip.initialize();

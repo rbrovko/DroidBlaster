@@ -308,8 +308,36 @@ TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
     png_destroy_read_struct(&pngPtr, &infoPtr, NULL);
     delete[] rowPtrs;
 
-    // TODO: add create texture
-    return NULL;
+    // Creates a new OpenGL texture
+    GLenum errorResult;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // setup texture properties
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // load image date info OpenGL
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image);
+
+    // destroy texture
+    glBindTexture(GL_TEXTURE_2D, 0);
+    delete[] image;
+    if (glGetError() != GL_NO_ERROR) {
+        goto ERROR;
+    }
+    Log::info("Texture size: %d x %d", width, height);
+
+    // Caches the loaded texture
+    textureProperties = &mTextures[mTextureCount++];
+    textureProperties->texture = texture;
+    textureProperties->textureResource = &pResource;
+    textureProperties->width = width;
+    textureProperties->height = height;
+
+    return textureProperties;
 
     ERROR:
     Log::error("Error loading texture info OpenGL");
