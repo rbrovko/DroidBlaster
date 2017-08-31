@@ -5,12 +5,15 @@
 #include "GraphicsManager.hpp"
 #include "Log.hpp"
 
+#include <png.h>
+
 GraphicsManager::GraphicsManager(android_app *pApplication) :
         mApplication(pApplication),
         mRenderWidth(0), mRenderHeight(0),
         mDisplay(EGL_NO_DISPLAY),
         mSurface(EGL_NO_SURFACE),
         mContext(EGL_NO_CONTEXT),
+        mTextures(), mTextureCount(0),
         mElements(), mElementCount(0) {
     Log::info("Creating GraphicsManager");
 }
@@ -119,6 +122,12 @@ status GraphicsManager::start() {
 void GraphicsManager::stop() {
     Log::info("Stopping GraphicsManager");
 
+    // Releases textures
+    for (int32_t i = 0; i < mTextureCount; ++i) {
+        glDeleteTextures(1, &mTextures[i].texture);
+    }
+    mTextureCount = 0;
+
     // Destroys OpenGL context
     if (mDisplay != EGL_NO_DISPLAY) {
         eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -151,4 +160,167 @@ status GraphicsManager::update() {
     }
 
     return STATUS_OK;
+}
+
+void callback_readPng(png_structp pStruct, png_bytep pData, png_size_t pSize) {
+    Resource *resource = ((Resource *) png_get_io_ptr(pStruct));
+    if (resource->read(pData, pSize) != STATUS_OK) {
+        resource->close();
+    }
+}
+
+TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
+    // Looks for the texture in cache first
+    for (int32_t i = 0; i < mTextureCount; ++i) {
+        if (pResource == *mTextures[i].textureResource) {
+            Log::info("Found %s in cache", pResource.getPath());
+
+            return &mTextures[i];
+        }
+    }
+
+    Log::info("Loading texture %s", pResource.getPath());
+    TextureProperties *textureProperties;
+    GLuint texture;
+    GLint format;
+    png_byte header[8];
+    png_structp pngPtr = NULL;
+    png_infop infoPtr = NULL;
+    png_byte *image = NULL;
+    png_bytep *rowPtrs = NULL;
+    png_int_32 rowSize;
+    bool transparency;
+
+    // Opens and checks image signature (first 8 bytes)
+    if (pResource.open() != STATUS_OK) {
+        goto ERROR;
+    }
+    Log::info("Checking signature");
+    if (pResource.read(header, sizeof(header)) != STATUS_OK) {
+        goto ERROR;
+    }
+    if (png_sig_cmp(header, 0, 8) != 0) {
+        goto ERROR;
+    }
+
+    // Creates required structures
+    Log::info("Creating required structures");
+    pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!pngPtr) {
+        goto ERROR;
+    }
+    infoPtr = png_create_info_struct(pngPtr);
+    if (!infoPtr) {
+        goto ERROR;
+    }
+
+    // Prepares reading operation by setting-up a read callback
+    png_set_read_fn(pngPtr, &pResource, callback_readPng);
+    // setup error management. If an error occurs while reading, code will come back here and jump
+    if (setjmp(png_jmpbuf(pngPtr))) {
+        goto ERROR;
+    }
+
+    // Ignores first 8 bytes already read and processes header
+    png_set_sig_bytes(pngPtr, 8);
+    // Retrieves PNG info and updates PNG struct accordingly
+    png_int_32 depth, colorType;
+    png_uint_32 width, height;
+    png_get_IHDR(pngPtr, infoPtr, &width, &height, &depth, &colorType, NULL, NULL, NULL);
+
+    /*
+     * Creates a full alpha channel if transparency is encoded as
+     * an array of palette entries or a single transparent color
+     */
+    transparency = false;
+    if (png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS)) {
+        png_set_tRNS_to_alpha(pngPtr);
+        transparency = true;
+    }
+
+    // Expands PNG with less than 8bits per channel to 8 bits
+    if (depth < 8) {
+        png_set_packing(pngPtr);
+    } else if (depth == 16) {
+        // Shrinks PNG with 16bits per color channel down to 8 bits
+        png_set_strip_16(pngPtr);
+    }
+
+    // Indicates that image needs conversion to RGBA if needed
+    switch (colorType) {
+        case PNG_COLOR_TYPE_PALETTE:
+            png_set_palette_to_rgb(pngPtr);
+            format = transparency ? GL_RGBA : GL_RGB;
+            break;
+
+        case PNG_COLOR_TYPE_RGB:
+            format = transparency ? GL_RGBA : GL_RGB;
+            break;
+
+        case PNG_COLOR_TYPE_RGBA:
+            format = GL_RGBA;
+            break;
+
+        case PNG_COLOR_TYPE_GRAY:
+            png_set_expand_gray_1_2_4_to_8(pngPtr);
+            format = transparency ? GL_LUMINANCE_ALPHA : GL_LUMINANCE;
+            break;
+
+        case PNG_COLOR_TYPE_GA:
+            png_set_expand_gray_1_2_4_to_8(pngPtr);
+            format = GL_LUMINANCE_ALPHA;
+            break;
+    }
+
+    // Validates all tranformations
+    png_read_update_info(pngPtr, infoPtr);
+
+    // Get row size in bytes
+    rowSize = png_get_rowbytes(pngPtr, infoPtr);
+    if (rowSize <= 0) {
+        goto ERROR;
+    }
+
+    // Ceates the image buffer that will be sent to OpenGL
+    image = new png_byte[rowSize * height];
+    if (!image) {
+        goto ERROR;
+    }
+
+    /*
+     *  Pointers to each row of the image buffer. Row order is
+     *  inverted because different coordinate systems are used by
+     *  OpenGL (1st pixel is at bottom left) and PNGs (top-left)
+     */
+    rowPtrs = new png_bytep[height];
+    if (!rowPtrs) {
+        goto ERROR;
+    }
+    for (int32_t i = 0; i < height; ++i) {
+        rowPtrs[height - (i + 1)] = image + i * rowSize;
+    }
+
+    // Reads image content
+    png_read_image(pngPtr, rowPtrs);
+
+    // Frees memory and resources
+    pResource.close();
+    png_destroy_read_struct(&pngPtr, &infoPtr, NULL);
+    delete[] rowPtrs;
+
+    // TODO: add create texture
+    return NULL;
+
+    ERROR:
+    Log::error("Error loading texture info OpenGL");
+    pResource.close();
+    delete[] rowPtrs;
+    delete [] image;
+
+    if (pngPtr != NULL) {
+        png_infop *infoPtrP = infoPtr != NULL ? &infoPtr : NULL;
+        png_destroy_read_struct(&pngPtr, infoPtrP, NULL);
+    }
+
+    return NULL;
 }

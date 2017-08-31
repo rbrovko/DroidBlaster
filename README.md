@@ -25,3 +25,16 @@ LOCAL_EXPORT_LDLIBS := -lz
 
 include $(BUILD_STATIC_LIBRARY)
 ```
+#### Quick fix in libpng 1.6.32 for arm64-v8a 
+arm64-v8a build fail with missing neon intrinsics.
+Changing the line number 132 in `pngpriv.h` form
+
+```
+define PNG_ARM_NEON_OPT 2
+```
+to
+
+```
+define PNG_ARM_NEON_OPT 0
+```
+will avoid neon optimization in arm and will fix the bug

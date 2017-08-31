@@ -6,6 +6,7 @@
 #define DROIDBLASTER_GRAPHICSMANAGER_HPP
 
 #include "Types.hpp"
+#include "Resource.hpp"
 
 #include <android_native_app_glue.h>
 #include <GLES2/gl2.h>
@@ -18,6 +19,13 @@ struct GraphicsElement {
             height(pHeight) {}
 
     Location location;
+    int32_t width;
+    int32_t height;
+};
+
+struct TextureProperties {
+    Resource *textureResource;
+    GLuint  texture;
     int32_t width;
     int32_t height;
 };
@@ -40,6 +48,8 @@ public:
     void stop();
     status update();
 
+    TextureProperties* loadTexture(Resource& pResource);
+
 private:
     android_app *mApplication;
 
@@ -52,6 +62,9 @@ private:
 
     GraphicsElement* mElements[1024];
     int32_t mElementCount;
+
+    TextureProperties mTextures[32];
+    int32_t mTextureCount;
 };
 
 #endif //DROIDBLASTER_GRAPHICSMANAGER_HPP
