@@ -13,7 +13,7 @@ Ship::Ship(android_app *pApplication, GraphicsManager &pGraphicsManager) :
         mGraphicsManager(pGraphicsManager),
         mGraphics(NULL) {}
 
-void Ship::registerShip(GraphicsElement *pGraphics) {
+void Ship::registerShip(Sprite *pGraphics) {
     mGraphics = pGraphics;
 }
 

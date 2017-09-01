@@ -13,6 +13,7 @@
 #include "Resource.hpp"
 #include "Ship.hpp"
 #include "Asteroid.hpp"
+#include "SpriteBatch.hpp"
 #include "Types.hpp"
 
 
@@ -55,6 +56,8 @@ private:
 
     Ship mShip;
     Asteroid mAsteroids;
+
+    SpriteBatch mSpriteBatch;
 };
 
 
