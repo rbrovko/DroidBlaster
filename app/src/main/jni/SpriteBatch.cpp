@@ -59,9 +59,9 @@ static const char* VERTEX_SHADER =
 static const char* FRAGMENT_SHADER =
         "precision mediump float;\n"
                 "varying vec2 vTexture;\n"
-                "uniform sampler2D u_texture;\n"
+                "uniform sampler2D uTexture;\n"
                 "void main() {\n"
-                "    gl_FragColor = texture2D(u_texture, vTexture);\n"
+                "    gl_FragColor = texture2D(uTexture, vTexture);\n"
                 "}";
 
 status SpriteBatch::load() {
@@ -77,7 +77,7 @@ status SpriteBatch::load() {
     aPosition = glGetAttribLocation(mShaderProgram, "aPosition");
     aTexture = glGetAttribLocation(mShaderProgram, "aTexture");
     uProjection = glGetUniformLocation(mShaderProgram, "uProjection");
-    uTexture = glGetUniformLocation(mShaderProgram, "u_texture");
+    uTexture = glGetUniformLocation(mShaderProgram, "uTexture");
 
     // Loads sprites
     for (int32_t i = 0; i < mSpriteCount; ++i) {

@@ -14,7 +14,6 @@
 class SpriteBatch;
 
 class Sprite {
-    friend class SpriteBatch;
 public:
     struct Vertex {
         GLfloat x, y, u, v;
@@ -28,6 +27,8 @@ public:
     Location location;
 
 protected:
+    friend class SpriteBatch;
+
     status load(GraphicsManager& pGraphicsManager);
     void draw(Vertex pVertex[4], float pTimeStep);
 
