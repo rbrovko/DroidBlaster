@@ -57,6 +57,7 @@ private:
     Resource mAsteroidTexture;
     Resource mShipTexture;
     Resource mStarTexture;
+    Resource mBGM;
 
     Ship mShip;
     Asteroid mAsteroids;

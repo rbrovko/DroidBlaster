@@ -31,6 +31,7 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mAsteroidTexture(pApplication, "droidblaster/asteroid.png"),
         mShipTexture(pApplication, "droidblaster/ship.png"),
         mStarTexture(pApplication, "droidblaster/star.png"),
+        mBGM(pApplication, "droidblaster/bgm.mp3"),
 
         mShip(pApplication, mGraphicsManager),
         mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager),
@@ -66,6 +67,7 @@ status DroidBlaster::onActivate() {
     if (mSoundManager.start() != STATUS_OK) {
         return STATUS_KO;
     }
+    mSoundManager.playBGM(mBGM);
 
     // Initializes game objects
     mShip.initialize();

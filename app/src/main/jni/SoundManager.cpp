@@ -5,12 +5,12 @@
 #include "SoundManager.hpp"
 #include "Log.hpp"
 #include "Resource.hpp"
-#include "../../../../../../../tools/Android/android-sdk-macosx/ndk-bundle/sources/android/native_app_glue/android_native_app_glue.h"
 
 SoundManager::SoundManager(android_app *pApplication) :
         mApplication(pApplication),
         mEngine(NULL), mEngineObj(NULL),
-        mOutputMixObj(NULL) {
+        mOutputMixObj(NULL),
+        mBGMPlayerObj(NULL), mBGMPlayer(NULL), mBGMPlayerSeek(NULL) {
     Log::info("Creating SoundManager");
 }
 
@@ -55,6 +55,7 @@ status SoundManager::start() {
 
 void SoundManager::stop() {
     Log::info("Stopping SoundManager");
+    stopBGM();
 
     // Destroys audio output and engine
     if (mOutputMixObj != NULL) {
@@ -66,5 +67,105 @@ void SoundManager::stop() {
         (*mEngineObj)->Destroy(mEngineObj);
         mEngineObj = NULL;
         mEngine = NULL;
+    }
+}
+
+status SoundManager::playBGM(Resource &pResource) {
+    SLresult result;
+    Log::info("Opening BGM %s", pResource.getPath());
+
+    // setup BGM audio source
+    ResourceDescription descriptor = pResource.description();
+    if (descriptor.mDescription < 0) {
+        Log::info("Could not open BGM file");
+        return STATUS_KO;
+    }
+
+    SLDataLocator_AndroidFD dataLocatorIn;
+    dataLocatorIn.locatorType = SL_DATALOCATOR_ANDROIDFD;
+    dataLocatorIn.fd = descriptor.mDescription;
+    dataLocatorIn.offset = descriptor.mStart;
+    dataLocatorIn.length = descriptor.mLength;
+
+    SLDataFormat_MIME dataFormat;
+    dataFormat.formatType = SL_DATAFORMAT_MIME;
+    dataFormat.mimeType = NULL;
+    dataFormat.containerType = SL_CONTAINERTYPE_UNSPECIFIED;
+
+    SLDataSource dataSource;
+    dataSource.pLocator = &dataLocatorIn;
+    dataSource.pFormat = &dataFormat;
+
+    SLDataLocator_OutputMix dataLocatorOut;
+    dataLocatorOut.locatorType = SL_DATALOCATOR_OUTPUTMIX;
+    dataLocatorOut.outputMix = mOutputMixObj;
+
+    SLDataSink dataSink;
+    dataSink.pLocator = &dataLocatorOut;
+    dataSink.pFormat = NULL;
+
+    // Creates BGM player and retrieves its interfaces
+    const SLuint32 bgmPlayerIIDCount = 2;
+    const SLInterfaceID bgmPlayerIIDs[] = {SL_IID_PLAY, SL_IID_SEEK};
+    const SLboolean bgmPlayerReqs[] = {SL_BOOLEAN_FALSE, SL_BOOLEAN_TRUE};
+
+    result = (*mEngine)->CreateAudioPlayer(mEngine, &mBGMPlayerObj, &dataSource, &dataSink,
+                                           bgmPlayerIIDCount, bgmPlayerIIDs, bgmPlayerReqs);
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    result = (*mBGMPlayerObj)->Realize(mBGMPlayerObj, SL_BOOLEAN_FALSE);
+
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    result = (*mBGMPlayerObj)->GetInterface(mBGMPlayerObj, SL_IID_PLAY, &mBGMPlayer);
+
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    result = (*mBGMPlayerObj)->GetInterface(mBGMPlayerObj, SL_IID_SEEK, &mBGMPlayerSeek);
+
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    // Enables looping and starts playing
+    result = (*mBGMPlayerSeek)->SetLoop(mBGMPlayerSeek, SL_BOOLEAN_TRUE, 0, SL_TIME_UNKNOWN);
+
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    result = (*mBGMPlayer)->SetPlayState(mBGMPlayer, SL_PLAYSTATE_PLAYING);
+
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    return STATUS_OK;
+
+    ERROR:
+    Log::error("Error playing BGM");
+
+    return STATUS_KO;
+}
+
+void SoundManager::stopBGM() {
+    if (mBGMPlayer != NULL) {
+        SLuint32 bgmPlayerState;
+        (*mBGMPlayerObj)->GetState(mBGMPlayerObj, &bgmPlayerState);
+
+        if (bgmPlayerState == SL_OBJECT_STATE_REALIZED) {
+            (*mBGMPlayer)->SetPlayState(mBGMPlayer, SL_PLAYSTATE_PAUSED);
+
+            (*mBGMPlayerObj)->Destroy(mBGMPlayerObj);
+            mBGMPlayerObj = NULL;
+            mBGMPlayer = NULL;
+            mBGMPlayerSeek = NULL;
+        }
     }
 }

@@ -9,6 +9,12 @@
 
 #include <android_native_app_glue.h>
 
+struct ResourceDescription {
+    int32_t mDescription;
+    off_t mStart;
+    off_t mLength;
+};
+
 class Resource {
 public:
     Resource(android_app *pApplication, const char *pPath);
@@ -18,6 +24,8 @@ public:
     status open();
     void close();
     status read(void* pBuffer, size_t pCount);
+
+    ResourceDescription description();
 
     bool operator==(const Resource& pOther);
 

@@ -6,9 +6,11 @@
 #define DROIDBLASTER_SOUNDMANAGER_HPP
 
 #include "Types.hpp"
+#include "Resource.hpp"
 
 #include <android_native_app_glue.h>
 #include <SLES/OpenSLES.h>
+#include <SLES/OpenSLES_Android.h>
 
 class SoundManager {
 public:
@@ -17,12 +19,19 @@ public:
     status start();
     void stop();
 
+    status playBGM(Resource& pResource);
+    void stopBGM();
+
 private:
     android_app* mApplication;
 
     SLObjectItf mEngineObj;
     SLEngineItf mEngine;
     SLObjectItf mOutputMixObj;
+
+    SLObjectItf mBGMPlayerObj;
+    SLPlayItf mBGMPlayer;
+    SLSeekItf mBGMPlayerSeek;
 };
 
 

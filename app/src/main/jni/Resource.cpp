@@ -30,6 +30,18 @@ status Resource::read(void *pBuffer, size_t pCount) {
     return (readCount == pCount) ? STATUS_OK : STATUS_KO;
 }
 
+ResourceDescription Resource::description() {
+    ResourceDescription lDescription = {-1, 0, 0};
+    AAsset *lAsset = AAssetManager_open(mAssetManager, mPath, AASSET_MODE_UNKNOWN);
+
+    if (lAsset != NULL) {
+        lDescription.mDescription = AAsset_openFileDescriptor(lAsset, &lDescription.mStart, &lDescription.mLength);
+        AAsset_close(lAsset);
+    }
+
+    return lDescription;
+}
+
 bool Resource::operator==(const Resource &pOther) {
     return !strcmp(mPath, pOther.mPath);
 }
