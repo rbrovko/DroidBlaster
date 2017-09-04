@@ -48,6 +48,7 @@ public:
 
     TextureProperties* loadTexture(Resource& pResource);
     GLuint loadShader(const char* pVertexShader, const char* pFragmentShader);
+    GLuint loadVertexBuffer(const void* pVertexBuffer, int32_t pVertexBufferSize);
 
 private:
     struct RenderVertex {
@@ -70,6 +71,9 @@ private:
 
     GLuint mShaders[32];
     int32_t mShaderCount;
+
+    GLuint mVertexBuffers[32];
+    int32_t mVertexBufferCount;
 
     GraphicsComponent* mComponents[32];
     int32_t mComponentCount;

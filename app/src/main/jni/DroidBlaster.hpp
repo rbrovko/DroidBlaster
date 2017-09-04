@@ -14,6 +14,7 @@
 #include "Ship.hpp"
 #include "Asteroid.hpp"
 #include "SpriteBatch.hpp"
+#include "StarField.hpp"
 #include "Types.hpp"
 
 
@@ -53,11 +54,13 @@ private:
 
     Resource mAsteroidTexture;
     Resource mShipTexture;
+    Resource mStarTexture;
 
     Ship mShip;
     Asteroid mAsteroids;
 
     SpriteBatch mSpriteBatch;
+    StarField mStarField;
 };
 
 

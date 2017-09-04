@@ -19,6 +19,8 @@ static const int32_t ASTEROID_FRAME_COUNT = 16;
 static const float ASTEROID_MIN_ANIM_SPEED = 8.0f;
 static const float ASTEROID_ANIM_SPEED_RANGE = 16.0f;
 
+static const int32_t STAR_COUNT = 50;
+
 DroidBlaster::DroidBlaster(android_app *pApplication):
         mTimeManager(),
         mGraphicsManager(pApplication),
@@ -27,9 +29,11 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
 
         mAsteroidTexture(pApplication, "droidblaster/asteroid.png"),
         mShipTexture(pApplication, "droidblaster/ship.png"),
+        mStarTexture(pApplication, "droidblaster/star.png"),
 
         mShip(pApplication, mGraphicsManager),
         mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager),
+        mStarField(pApplication, mTimeManager, mGraphicsManager, STAR_COUNT, mStarTexture),
         mSpriteBatch(mTimeManager, mGraphicsManager) {
 
     Log::info("Creating DroidBlaster");

@@ -16,6 +16,7 @@ GraphicsManager::GraphicsManager(android_app *pApplication) :
         mProjectionMatrix(),
         mTextures(), mTextureCount(0),
         mShaders(), mShaderCount(0),
+        mVertexBuffers(), mVertexBufferCount(0),
         mComponents(), mComponentCount(0) {
     Log::info("Creating GraphicsManager");
 }
@@ -147,6 +148,11 @@ void GraphicsManager::stop() {
         glDeleteProgram(mShaders[i]);
     }
     mShaderCount = 0;
+
+    for (int32_t i = 0; i < mVertexBufferCount; ++i) {
+        glDeleteBuffers(1, &mVertexBuffers[i]);
+    }
+    mVertexBufferCount = 0;
 
     // Destroys OpenGL context
     if (mDisplay != EGL_NO_DISPLAY) {
@@ -431,6 +437,33 @@ GLuint GraphicsManager::loadShader(const char *pVertexShader, const char *pFragm
     }
     if (fragmentShader > 0) {
         glDeleteShader(fragmentShader);
+    }
+
+    return 0;
+}
+
+GLuint GraphicsManager::loadVertexBuffer(const void *pVertexBuffer, int32_t pVertexBufferSize) {
+    GLuint vertexBuffer;
+
+    // Upload specified memory buffer into OpenGL
+    glGenBuffers(1, &vertexBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, pVertexBufferSize, pVertexBuffer, GL_STATIC_DRAW);
+
+    // Unbinds the buffer
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    if (glGetError() != GL_NO_ERROR) {
+        goto ERROR;
+    }
+
+    mVertexBuffers[mVertexBufferCount++] = vertexBuffer;
+
+    return vertexBuffer;
+
+    ERROR:
+    Log::error("Error loading vertex buffer");
+    if (vertexBuffer > 0) {
+        glDeleteBuffers(1, &vertexBuffer);
     }
 
     return 0;
