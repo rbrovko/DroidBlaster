@@ -12,15 +12,10 @@
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 
-struct GraphicsElement {
-    GraphicsElement(int32_t pWidth, int32_t pHeight) :
-            location(),
-            width(pWidth),
-            height(pHeight) {}
-
-    Location location;
-    int32_t width;
-    int32_t height;
+class GraphicsComponent {
+public:
+    virtual status load() = 0;
+    virtual void draw() = 0;
 };
 
 struct TextureProperties {
@@ -41,16 +36,24 @@ public:
     int32_t getRenderHeight() {
         return mRenderHeight;
     }
+    GLfloat* getProjectionMatrix() {
+        return mProjectionMatrix[0];
+    }
 
-    GraphicsElement* registerElement(int32_t pHeight, int32_t pWidth);
+    void registerComponent(GraphicsComponent *pComponent);
 
     status start();
     void stop();
     status update();
 
     TextureProperties* loadTexture(Resource& pResource);
+    GLuint loadShader(const char* pVertexShader, const char* pFragmentShader);
 
 private:
+    struct RenderVertex {
+        GLfloat x, y, u, v;
+    };
+
     android_app *mApplication;
 
     int32_t mRenderWidth;
@@ -60,11 +63,16 @@ private:
     EGLSurface mSurface;
     EGLContext mContext;
 
-    GraphicsElement* mElements[1024];
-    int32_t mElementCount;
+    GLfloat mProjectionMatrix[4][4];
 
     TextureProperties mTextures[32];
     int32_t mTextureCount;
+
+    GLuint mShaders[32];
+    int32_t mShaderCount;
+
+    GraphicsComponent* mComponents[32];
+    int32_t mComponentCount;
 };
 
 #endif //DROIDBLASTER_GRAPHICSMANAGER_HPP

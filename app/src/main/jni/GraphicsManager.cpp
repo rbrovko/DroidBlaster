@@ -13,22 +13,19 @@ GraphicsManager::GraphicsManager(android_app *pApplication) :
         mDisplay(EGL_NO_DISPLAY),
         mSurface(EGL_NO_SURFACE),
         mContext(EGL_NO_CONTEXT),
+        mProjectionMatrix(),
         mTextures(), mTextureCount(0),
-        mElements(), mElementCount(0) {
+        mShaders(), mShaderCount(0),
+        mComponents(), mComponentCount(0) {
     Log::info("Creating GraphicsManager");
 }
 
 GraphicsManager::~GraphicsManager() {
     Log::info("Destroying GraphicsManager");
-    for (int32_t i = 0; i < mElementCount; ++i) {
-        delete mElements[i];
-    }
 }
 
-GraphicsElement* GraphicsManager::registerElement(int32_t pHeight, int32_t pWidth) {
-    mElements[mElementCount] = new GraphicsElement(pHeight, pWidth);
-
-    return mElements[mElementCount++];
+void GraphicsManager::registerComponent(GraphicsComponent *pComponent) {
+    mComponents[mComponentCount++] = pComponent;
 }
 
 status GraphicsManager::start() {
@@ -103,12 +100,29 @@ status GraphicsManager::start() {
     glViewport(0, 0, mRenderWidth, mRenderHeight);
     glDisable(GL_DEPTH_TEST);
 
+    // Prepares the projection matrix
+    memset(mProjectionMatrix[0], 0, sizeof(mProjectionMatrix));
+    mProjectionMatrix[0][0] = 2.0f / GLfloat(mRenderWidth);
+    mProjectionMatrix[1][1] = 2.0f / GLfloat(mRenderHeight);
+    mProjectionMatrix[2][2] = -1.0f;
+    mProjectionMatrix[3][0] = -1.0f;
+    mProjectionMatrix[3][1] = -1.0;
+    mProjectionMatrix[3][2] = 0.0f;
+    mProjectionMatrix[3][3] = 1.0f;
+
     // Displays information about OpenGL
     Log::info("Starting GraphicsManager");
     Log::info("Version   : %s", glGetString(GL_VERSION));
     Log::info("Vendor    : %s", glGetString(GL_VENDOR));
     Log::info("Renderer  : %s", glGetString(GL_RENDERER));
     Log::info("Offscreen : %d x %d", mRenderWidth, mRenderHeight);
+
+    // Loads graphics components
+    for (int32_t i = 0; i < mComponentCount; ++i) {
+        if (mComponents[i]->load() != STATUS_OK) {
+            goto ERROR;
+        }
+    }
 
     return STATUS_OK;
 
@@ -127,6 +141,12 @@ void GraphicsManager::stop() {
         glDeleteTextures(1, &mTextures[i].texture);
     }
     mTextureCount = 0;
+
+    // Releases shaders
+    for (int32_t i = 0; i < mShaderCount; ++i) {
+        glDeleteProgram(mShaders[i]);
+    }
+    mShaderCount = 0;
 
     // Destroys OpenGL context
     if (mDisplay != EGL_NO_DISPLAY) {
@@ -152,6 +172,11 @@ status GraphicsManager::update() {
     clearColor += 0.001f;
     glClearColor(clearColor, clearColor, clearColor, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    // Render graphic components
+    for (int32_t i = 0; i < mTextureCount; ++i) {
+        mComponents[i]->draw();
+    }
 
     // Shows the result to the user
     if (eglSwapBuffers(mDisplay, mSurface) != EGL_TRUE) {
@@ -352,4 +377,63 @@ TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
     }
 
     return NULL;
+}
+
+GLuint GraphicsManager::loadShader(const char *pVertexShader, const char *pFragmentShader) {
+    GLint result;
+    char log[256];
+    GLuint vertexShader, fragmentShader, shaderProgram;
+
+    // Builds the vertex shader
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &pVertexShader, NULL);
+    glCompileShader(vertexShader);
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &result);
+    if (result == GL_FALSE) {
+        glGetShaderInfoLog(vertexShader, sizeof(log), 0, log);
+        Log::error("Vertex shader error: %s", log);
+        goto ERROR;
+    }
+
+    // Builds the fragment shader
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &pFragmentShader, NULL);
+    glCompileShader(fragmentShader);
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &result);
+    if (result == GL_FALSE) {
+        glGetShaderInfoLog(fragmentShader, sizeof(log), 0, log);
+        Log::error("Fragment shader error: %s", log);
+        goto ERROR;
+    }
+
+    // Builds the shader program
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &result);
+
+    // Once linked, shaders are useless
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    if (result == GL_FALSE) {
+        glGetProgramInfoLog(shaderProgram, sizeof(log), 0, log);
+        Log::error("Shader program error: %s", log);
+        goto ERROR;
+    }
+
+    mShaders[mShaderCount++] = shaderProgram;
+
+    return shaderProgram;
+
+    ERROR:
+    Log::error("Error loading shader");
+    if (vertexShader > 0) {
+        glDeleteShader(vertexShader);
+    }
+    if (fragmentShader > 0) {
+        glDeleteShader(fragmentShader);
+    }
+
+    return 0;
 }
