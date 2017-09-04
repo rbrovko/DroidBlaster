@@ -226,6 +226,7 @@ TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
     // Retrieves PNG info and updates PNG struct accordingly
     png_int_32 depth, colorType;
     png_uint_32 width, height;
+    png_read_info(pngPtr, infoPtr);
     png_get_IHDR(pngPtr, infoPtr, &width, &height, &depth, &colorType, NULL, NULL, NULL);
 
     /*
@@ -281,7 +282,7 @@ TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
         goto ERROR;
     }
 
-    // Ceates the image buffer that will be sent to OpenGL
+    // Creates the image buffer that will be sent to OpenGL
     image = new png_byte[rowSize * height];
     if (!image) {
         goto ERROR;
