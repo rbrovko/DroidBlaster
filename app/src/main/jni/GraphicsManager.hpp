@@ -36,6 +36,13 @@ public:
     int32_t getRenderHeight() {
         return mRenderHeight;
     }
+    int32_t getScreenWidth() {
+        return mScreenWidth;
+    }
+    int32_t getScreenHeight() {
+        return mScreenHeight;
+    };
+
     GLfloat* getProjectionMatrix() {
         return mProjectionMatrix[0];
     }
@@ -51,14 +58,16 @@ public:
     GLuint loadVertexBuffer(const void* pVertexBuffer, int32_t pVertexBufferSize);
 
 private:
+    status initializeRenderBuffer();
+
     struct RenderVertex {
         GLfloat x, y, u, v;
     };
 
     android_app *mApplication;
 
-    int32_t mRenderWidth;
-    int32_t mRenderHeight;
+    int32_t mRenderWidth, mRenderHeight;
+    int32_t mScreenWidth, mScreenHeight;
 
     EGLDisplay mDisplay;
     EGLSurface mSurface;
@@ -66,6 +75,7 @@ private:
 
     GLfloat mProjectionMatrix[4][4];
 
+    // Graphics resources
     TextureProperties mTextures[32];
     int32_t mTextureCount;
 
@@ -77,6 +87,13 @@ private:
 
     GraphicsComponent* mComponents[32];
     int32_t mComponentCount;
+
+    // Rendering resources
+    GLint mScreenFrameBuffer;
+    GLuint mRenderFrameBuffer, mRenderVertexBuffer;
+    GLuint mRenderTexture, mRenderShaderProgram;
+    GLuint aPosition, aTexture;
+    GLuint uProjection, uTexture;
 };
 
 #endif //DROIDBLASTER_GRAPHICSMANAGER_HPP
