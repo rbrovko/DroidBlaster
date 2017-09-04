@@ -10,6 +10,7 @@
 #include "GraphicsManager.hpp"
 #include "PhysicsManager.hpp"
 #include "TimeManager.hpp"
+#include "SoundManager.hpp"
 #include "Resource.hpp"
 #include "Ship.hpp"
 #include "Asteroid.hpp"
@@ -50,6 +51,7 @@ private:
     GraphicsManager mGraphicsManager;
     TimeManager mTimeManager;
     PhysicsManager mPhysicsManager;
+    SoundManager mSoundManager;
     EventLoop mEventLoop;
 
     Resource mAsteroidTexture;

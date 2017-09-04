@@ -25,6 +25,7 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mTimeManager(),
         mGraphicsManager(pApplication),
         mPhysicsManager(mTimeManager, mGraphicsManager),
+        mSoundManager(pApplication),
         mEventLoop(pApplication, *this),
 
         mAsteroidTexture(pApplication, "droidblaster/asteroid.png"),
@@ -62,6 +63,9 @@ status DroidBlaster::onActivate() {
     if (mGraphicsManager.start() != STATUS_OK) {
         return STATUS_KO;
     }
+    if (mSoundManager.start() != STATUS_OK) {
+        return STATUS_KO;
+    }
 
     // Initializes game objects
     mShip.initialize();
@@ -75,6 +79,7 @@ status DroidBlaster::onActivate() {
 void DroidBlaster::onDeactivate() {
     Log::info("Deactivating DroidBlaster");
     mGraphicsManager.stop();
+    mSoundManager.stop();
 }
 
 status DroidBlaster::onStep() {
