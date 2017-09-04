@@ -67,7 +67,7 @@ void EventLoop::activate() {
 
 void EventLoop::deactivate() {
     if (mEnabled) {
-        mActivityHandler.onActivate();
+        mActivityHandler.onDeactivate();
         mEnabled = false;
     }
 }

@@ -77,7 +77,7 @@ status SpriteBatch::load() {
     aPosition = glGetAttribLocation(mShaderProgram, "aPosition");
     aTexture = glGetAttribLocation(mShaderProgram, "aTexture");
     uProjection = glGetUniformLocation(mShaderProgram, "uProjection");
-    uTexture = glGetUniformLocation(mShaderProgram, "uTexture");
+    uTexture = glGetUniformLocation(mShaderProgram, "u_texture");
 
     // Loads sprites
     for (int32_t i = 0; i < mSpriteCount; ++i) {

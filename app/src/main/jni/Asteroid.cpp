@@ -25,8 +25,8 @@ void Asteroid::initialize() {
     mMinBound = mGraphicsManager.getRenderHeight();
     mUpperBound = mMinBound * 2;
     mLowerBound = -BOUNDS_MARGIN;
-    mLowerBound = -BOUNDS_MARGIN;
-    mRightBound = (mGraphicsManager.getRenderWidth() + + BOUNDS_MARGIN);
+    mLeftBound = -BOUNDS_MARGIN;
+    mRightBound = (mGraphicsManager.getRenderWidth() + BOUNDS_MARGIN);
 
     for (int32_t i = 0; i < mBodyCount; ++i) {
         spawn(mBodies[i]);

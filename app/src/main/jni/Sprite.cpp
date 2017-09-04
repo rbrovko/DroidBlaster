@@ -18,7 +18,7 @@ Sprite::Sprite(GraphicsManager &pGraphicsManager, Resource &pTextureResource, in
 status Sprite::load(GraphicsManager &pGraphicsManager) {
     TextureProperties *textureProperties = pGraphicsManager.loadTexture(mTextureResource);
     if (textureProperties == NULL) {
-        return STATUS_OK;
+        return STATUS_KO;
     }
     mTexture = textureProperties->texture;
     mSheetWidth = textureProperties->width;

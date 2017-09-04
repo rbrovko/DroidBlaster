@@ -168,13 +168,11 @@ void GraphicsManager::stop() {
 }
 
 status GraphicsManager::update() {
-    static float clearColor = 0.0f;
-    clearColor += 0.001f;
-    glClearColor(clearColor, clearColor, clearColor, 1.0f);
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Render graphic components
-    for (int32_t i = 0; i < mTextureCount; ++i) {
+    for (int32_t i = 0; i < mComponentCount; ++i) {
         mComponents[i]->draw();
     }
 
