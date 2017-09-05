@@ -26,6 +26,7 @@ public:
     status read(void* pBuffer, size_t pCount);
 
     ResourceDescription description();
+    off_t getLength();
 
     bool operator==(const Resource& pOther);
 

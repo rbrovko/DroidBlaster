@@ -4,6 +4,7 @@
 
 #include "DroidBlaster.hpp"
 #include "Log.hpp"
+#include "Sound.hpp"
 
 #include <unistd.h>
 
@@ -32,8 +33,9 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mShipTexture(pApplication, "droidblaster/ship.png"),
         mStarTexture(pApplication, "droidblaster/star.png"),
         mBGM(pApplication, "droidblaster/bgm.mp3"),
+        mCollisionSound(pApplication, "droidblaster/collision.pcm"),
 
-        mShip(pApplication, mGraphicsManager),
+        mShip(pApplication, mGraphicsManager, mSoundManager),
         mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager),
         mStarField(pApplication, mTimeManager, mGraphicsManager, STAR_COUNT, mStarTexture),
         mSpriteBatch(mTimeManager, mGraphicsManager) {
@@ -42,7 +44,8 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
 
     Sprite *shipGraphics = mSpriteBatch.registerSprite(mShipTexture, SHIP_SIZE, SHIP_SIZE);
     shipGraphics->setAnimation(SHIP_FRAME_1, SHIP_FRAME_COUNT, SHIP_ANIM_SPEED, true);
-    mShip.registerShip(shipGraphics);
+    Sound *collisionSound = mSoundManager.registerSound(mCollisionSound);
+    mShip.registerShip(shipGraphics, collisionSound);
 
     // Creates asteroids
     for (int32_t i = 0; i < ASTEROID_COUNT; ++i) {

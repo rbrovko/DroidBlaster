@@ -58,6 +58,7 @@ private:
     Resource mShipTexture;
     Resource mStarTexture;
     Resource mBGM;
+    Resource mCollisionSound;
 
     Ship mShip;
     Asteroid mAsteroids;

@@ -42,6 +42,10 @@ ResourceDescription Resource::description() {
     return lDescription;
 }
 
+off_t Resource::getLength() {
+    return AAsset_getLength(mAsset);
+}
+
 bool Resource::operator==(const Resource &pOther) {
     return !strcmp(mPath, pOther.mPath);
 }

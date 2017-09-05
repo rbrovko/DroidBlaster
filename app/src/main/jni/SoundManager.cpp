@@ -10,8 +10,18 @@ SoundManager::SoundManager(android_app *pApplication) :
         mApplication(pApplication),
         mEngine(NULL), mEngineObj(NULL),
         mOutputMixObj(NULL),
-        mBGMPlayerObj(NULL), mBGMPlayer(NULL), mBGMPlayerSeek(NULL) {
+        mBGMPlayerObj(NULL), mBGMPlayer(NULL), mBGMPlayerSeek(NULL),
+        mSoundQueues(), mCurrentQueue(0),
+        mSounds(), mSoundCount(0) {
     Log::info("Creating SoundManager");
+}
+
+SoundManager::~SoundManager() {
+    Log::info("Destroying SoundManager");
+    for (int32_t i = 0; i < mSoundCount; ++i) {
+        delete mSounds[i];
+    }
+    mSoundCount = 0;
 }
 
 status SoundManager::start() {
@@ -42,7 +52,29 @@ status SoundManager::start() {
 
     // Creates audio output
     result = (*mEngine)->CreateOutputMix(mEngine, &mOutputMixObj, outputMixIIDCount, outputMixIIDs, outputMixReqs);
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
     result = (*mOutputMixObj)->Realize(mOutputMixObj, SL_BOOLEAN_FALSE);
+    if (result != SL_RESULT_SUCCESS) {
+        goto ERROR;
+    }
+
+    // Setup sound player
+    Log::info("Starting sound player");
+    for (int32_t i = 0; i < QUEUE_COUNT; ++i) {
+        if (mSoundQueues[i].initialize(mEngine, mOutputMixObj) != STATUS_OK) {
+            goto ERROR;
+        }
+    }
+
+    // Loads resources
+    for (int32_t i = 0; i < mSoundCount; ++i) {
+        if (mSounds[i]->load() != STATUS_OK) {
+            goto ERROR;
+        }
+    }
 
     return STATUS_OK;
 
@@ -55,7 +87,14 @@ status SoundManager::start() {
 
 void SoundManager::stop() {
     Log::info("Stopping SoundManager");
+
+    // Stops and destroys BGM player
     stopBGM();
+
+    // Destroys sound player
+    for (int32_t i = 0; i < QUEUE_COUNT; ++i) {
+        mSoundQueues[i].finalize();
+    }
 
     // Destroys audio output and engine
     if (mOutputMixObj != NULL) {
@@ -67,6 +106,11 @@ void SoundManager::stop() {
         (*mEngineObj)->Destroy(mEngineObj);
         mEngineObj = NULL;
         mEngine = NULL;
+    }
+
+    // Frees sound resources
+    for (int32_t i = 0; i < mSoundCount; ++i) {
+        mSounds[i]->unload();
     }
 }
 
@@ -168,4 +212,23 @@ void SoundManager::stopBGM() {
             mBGMPlayerSeek = NULL;
         }
     }
+}
+
+Sound* SoundManager::registerSound(Resource &pResource) {
+    for (int32_t i = 0; i < mSoundCount; ++i) {
+        if (strcmp(pResource.getPath(), mSounds[i]->getPath()) == 0) {
+            return mSounds[i];
+        }
+    }
+
+    Sound* sound = new Sound(mApplication, &pResource);
+    mSounds[mSoundCount++] = sound;
+
+    return sound;
+}
+
+void SoundManager::playSound(Sound *pSound) {
+    int32_t currentQueue = ++mCurrentQueue;
+    SoundQueue& soundQueue = mSoundQueues[currentQueue % QUEUE_COUNT];
+    soundQueue.playSound(pSound);
 }
