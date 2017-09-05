@@ -6,6 +6,7 @@
 #define DROIDBLASTER_INPUTHANDLER_HPP
 
 #include <android/input.h>
+#include <android/sensor.h>
 
 class InputHandler {
 public:
@@ -14,6 +15,7 @@ public:
     virtual bool onTouchEvent(AInputEvent *pEvent) = 0;
     virtual bool onKeyboardEvent(AInputEvent *pEvent) = 0;
     virtual bool onTrackballEvent(AInputEvent *pEvent) = 0;
+    virtual bool onAccelerometerEvent(ASensorEvent *pEvent) = 0;
 };
 
 

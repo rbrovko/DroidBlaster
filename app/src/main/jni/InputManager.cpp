@@ -156,3 +156,7 @@ bool InputManager::onTrackballEvent(AInputEvent *pEvent) {
 
     return true;
 }
+
+bool InputManager::onAccelerometerEvent(ASensorEvent *pEvent) {
+
+}
