@@ -11,6 +11,7 @@
 class Sound {
 public:
     Sound(android_app* pApplication, Resource* pResource);
+    Sound(android_app* pApplication, int32_t pLength);
 
     const char* getPath();
     uint8_t* getBuffer() { return mBuffer; }

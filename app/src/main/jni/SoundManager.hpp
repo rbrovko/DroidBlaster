@@ -28,6 +28,9 @@ public:
     Sound* registerSound(Resource& pResource);
     void playSound(Sound *pSound);
 
+    void recordSound();
+    void playRecordSound();
+
 private:
     android_app* mApplication;
 
@@ -39,12 +42,23 @@ private:
     SLPlayItf mBGMPlayer;
     SLSeekItf mBGMPlayerSeek;
 
-    static const int32_t QUEUE_COUNT = 4;
+    static const int32_t QUEUE_COUNT = 5;
     SoundQueue mSoundQueues[QUEUE_COUNT];
     int32_t mCurrentQueue;
 
+    // sound
     Sound* mSounds[32];
     int32_t mSoundCount;
+
+    // sound record
+    SLObjectItf mRecorderObj;
+    SLRecordItf mRecorder;
+    SLAndroidSimpleBufferQueueItf mRecorderQueue;
+    // record buffer
+    Sound mRecorderSound;
+
+    status startSoundRecorder();
+    static void callback_recorder(SLAndroidSimpleBufferQueueItf pQueue, void* pContext);
 };
 
 

@@ -71,6 +71,7 @@ status DroidBlaster::onActivate() {
         return STATUS_KO;
     }
     mSoundManager.playBGM(mBGM);
+    mSoundManager.recordSound();
 
     // Initializes game objects
     mShip.initialize();
