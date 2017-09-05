@@ -67,6 +67,15 @@ int32_t EventLoop::processInputEvent(AInputEvent *pEvent) {
             return mInputHandler.onTouchEvent(pEvent);
             break;
 
+        case AINPUT_SOURCE_TRACKBALL:
+            return mInputHandler.onTrackballEvent(pEvent);
+            break;
+
+
+        case AINPUT_EVENT_TYPE_KEY:
+            return mInputHandler.onKeyboardEvent(pEvent);
+            break;
+
         default:
             break;
     }

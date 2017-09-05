@@ -23,6 +23,8 @@ public:
 
 protected:
     bool onTouchEvent(AInputEvent *pEvent);
+    bool onKeyboardEvent(AInputEvent *pEvent);
+    bool onTrackballEvent(AInputEvent *pEvent);
 
 private:
     android_app *mApplication;

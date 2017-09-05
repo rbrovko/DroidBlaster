@@ -54,3 +54,105 @@ bool InputManager::onTouchEvent(AInputEvent *pEvent) {
 
     return true;
 }
+
+bool InputManager::onKeyboardEvent(AInputEvent *pEvent) {
+    static const float ORTHOGONAL_MOVE = 1.0f;
+
+    if (AKeyEvent_getAction(pEvent) == AKEY_EVENT_ACTION_DOWN) {
+        switch (AKeyEvent_getKeyCode(pEvent)) {
+            case AKEYCODE_DPAD_LEFT:
+                mDirectionX = -ORTHOGONAL_MOVE;
+                return true;
+
+            case AKEYCODE_DPAD_RIGHT:
+                mDirectionX = ORTHOGONAL_MOVE;
+                return true;
+
+            case AKEYCODE_DPAD_DOWN:
+                mDirectionY = -ORTHOGONAL_MOVE;
+                return true;
+
+            case AKEYCODE_DPAD_UP:
+                mDirectionY = ORTHOGONAL_MOVE;
+                return true;
+        }
+    } else {
+        switch (AKeyEvent_getKeyCode(pEvent)) {
+            case AKEYCODE_DPAD_LEFT:
+            case AKEYCODE_DPAD_RIGHT:
+                mDirectionX = 0.0f;
+                return true;
+
+            case AKEYCODE_DPAD_DOWN:
+            case AKEYCODE_DPAD_UP:
+                mDirectionY = 0.0f;
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool InputManager::onTrackballEvent(AInputEvent *pEvent) {
+    static const float ORTHOGONAL_MOVE = 1.0f;
+    static const float DIAGONAL_MOVE = 0.707f;
+    static const float THRESHOLD = (1 / 100.0f);
+
+    if (AMotionEvent_getAction(pEvent) == AMOTION_EVENT_ACTION_MOVE) {
+        float directionX = AMotionEvent_getX(pEvent, 0);
+        float directionY = AMotionEvent_getY(pEvent, 0);
+        float horizontal, vertical;
+
+        if (directionX < -THRESHOLD) {
+            if (directionY < -THRESHOLD) {
+                horizontal = -DIAGONAL_MOVE;
+                vertical = DIAGONAL_MOVE;
+            } else if (directionY > THRESHOLD) {
+                horizontal = -DIAGONAL_MOVE;
+                vertical = -DIAGONAL_MOVE;
+            } else {
+                horizontal = -ORTHOGONAL_MOVE;
+                vertical = 0.0f;
+            }
+        } else if (directionX > THRESHOLD) {
+            if (directionY < -THRESHOLD) {
+                horizontal = DIAGONAL_MOVE;
+                vertical = DIAGONAL_MOVE;
+            } else if (directionY > THRESHOLD) {
+                horizontal = DIAGONAL_MOVE;
+                vertical = -DIAGONAL_MOVE;
+            } else {
+                horizontal = ORTHOGONAL_MOVE;
+                vertical = 0.0f;
+            }
+        } else if (directionY < -THRESHOLD) {
+            horizontal = 0.0f;
+            vertical = ORTHOGONAL_MOVE;
+        } else if (directionY > THRESHOLD) {
+            horizontal = 0.0f;
+            vertical = -ORTHOGONAL_MOVE;
+        }
+
+        // Ends movement if there is a counter movement
+        if ((horizontal < 0.0f) && (mDirectionX > 0.0f)) {
+            mDirectionX = 0.0f;
+        } else if ((horizontal > 0.0f) && (mDirectionX < 0.0f)) {
+            mDirectionX = 0.0f;
+        } else {
+            mDirectionX = horizontal;
+        }
+
+        if ((vertical < 0.0f) && (mDirectionY > 0.0f)) {
+            mDirectionY = 0.0f;
+        } else if ((vertical > 0.0f) && (mDirectionY < 0.0f)) {
+            mDirectionY = 0.0f;
+        } else {
+            mDirectionY = vertical;
+        }
+    } else {
+        mDirectionX = 0.0f;
+        mDirectionY = 0.0f;
+    }
+
+    return true;
+}
