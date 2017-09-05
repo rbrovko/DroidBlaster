@@ -11,6 +11,8 @@
 #include "PhysicsManager.hpp"
 #include "TimeManager.hpp"
 #include "SoundManager.hpp"
+#include "InputManager.hpp"
+#include "MoveableBody.hpp"
 #include "Resource.hpp"
 #include "Ship.hpp"
 #include "Asteroid.hpp"
@@ -52,6 +54,7 @@ private:
     TimeManager mTimeManager;
     PhysicsManager mPhysicsManager;
     SoundManager mSoundManager;
+    InputManager mInputManager;
     EventLoop mEventLoop;
 
     Resource mAsteroidTexture;
@@ -65,6 +68,8 @@ private:
 
     SpriteBatch mSpriteBatch;
     StarField mStarField;
+
+    MoveableBody mMoveableBody;
 };
 
 

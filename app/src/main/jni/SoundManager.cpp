@@ -71,9 +71,10 @@ status SoundManager::start() {
         }
     }
 
-    if (startSoundRecorder() != STATUS_OK) {
-        goto ERROR;
-    }
+    // TODO: without record
+//    if (startSoundRecorder() != STATUS_OK) {
+//        goto ERROR;
+//    }
 
     // Loads resources
     for (int32_t i = 0; i < mSoundCount; ++i) {
@@ -82,7 +83,8 @@ status SoundManager::start() {
         }
     }
 
-    mRecorderSound.load();
+    // TODO: without record
+//    mRecorderSound.load();
 
     return STATUS_OK;
 

@@ -397,7 +397,6 @@ TextureProperties* GraphicsManager::loadTexture(Resource &pResource) {
     if (png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS)) {
         png_set_tRNS_to_alpha(pngPtr);
         transparency = true;
-        goto ERROR;
     }
 
     // Expands PNG with less than 8bits per channel to 8 bits

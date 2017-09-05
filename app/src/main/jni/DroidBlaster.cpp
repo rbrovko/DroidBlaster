@@ -27,7 +27,8 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mGraphicsManager(pApplication),
         mPhysicsManager(mTimeManager, mGraphicsManager),
         mSoundManager(pApplication),
-        mEventLoop(pApplication, *this),
+        mInputManager(pApplication, mGraphicsManager),
+        mEventLoop(pApplication, *this, mInputManager),
 
         mAsteroidTexture(pApplication, "droidblaster/asteroid.png"),
         mShipTexture(pApplication, "droidblaster/ship.png"),
@@ -38,13 +39,16 @@ DroidBlaster::DroidBlaster(android_app *pApplication):
         mShip(pApplication, mGraphicsManager, mSoundManager),
         mAsteroids(pApplication, mTimeManager, mGraphicsManager, mPhysicsManager),
         mStarField(pApplication, mTimeManager, mGraphicsManager, STAR_COUNT, mStarTexture),
-        mSpriteBatch(mTimeManager, mGraphicsManager) {
+        mSpriteBatch(mTimeManager, mGraphicsManager),
+
+        mMoveableBody(pApplication, mInputManager, mPhysicsManager) {
 
     Log::info("Creating DroidBlaster");
 
     Sprite *shipGraphics = mSpriteBatch.registerSprite(mShipTexture, SHIP_SIZE, SHIP_SIZE);
     shipGraphics->setAnimation(SHIP_FRAME_1, SHIP_FRAME_COUNT, SHIP_ANIM_SPEED, true);
     Sound *collisionSound = mSoundManager.registerSound(mCollisionSound);
+    mMoveableBody.registerMoveableBody(shipGraphics->location, SHIP_SIZE, SHIP_SIZE);
     mShip.registerShip(shipGraphics, collisionSound);
 
     // Creates asteroids
@@ -70,12 +74,17 @@ status DroidBlaster::onActivate() {
     if (mSoundManager.start() != STATUS_OK) {
         return STATUS_KO;
     }
+    mInputManager.start();
+
+    // Plays music and a sound at startup
     mSoundManager.playBGM(mBGM);
-    mSoundManager.recordSound();
+    // TODO: without record
+//    mSoundManager.recordSound();
 
     // Initializes game objects
-    mShip.initialize();
     mAsteroids.initialize();
+    mShip.initialize();
+    mMoveableBody.initialize();
 
     mTimeManager.reset();
 
@@ -94,6 +103,7 @@ status DroidBlaster::onStep() {
 
     // updates models
     mAsteroids.update();
+    mMoveableBody.update();
 
     return mGraphicsManager.update();
 }

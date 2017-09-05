@@ -7,11 +7,15 @@
 #include "Log.hpp"
 
 EventLoop::EventLoop(android_app *pApplication,
-                     ActivityHandler &pActivityHandler):
+                     ActivityHandler &pActivityHandler,
+                     InputHandler &pInputHandler) :
         mApplication(pApplication),
-        mEnabled(false), mQuit(false), mActivityHandler(pActivityHandler) {
+        mEnabled(false), mQuit(false),
+        mActivityHandler(pActivityHandler),
+        mInputHandler(pInputHandler) {
     mApplication->userData = this;
     mApplication->onAppCmd = callback_appEvent;
+    mApplication->onInputEvent = callback_input;
 }
 
 void EventLoop::run() {
@@ -45,6 +49,29 @@ void EventLoop::run() {
             }
         }
     }
+}
+
+int32_t EventLoop::callback_input(android_app *pApplication, AInputEvent *pEvent) {
+    EventLoop& eventLoop = *(EventLoop *)pApplication->userData;
+    return eventLoop.processInputEvent(pEvent);
+}
+
+int32_t EventLoop::processInputEvent(AInputEvent *pEvent) {
+    if (!mEnabled) {
+        return 0;
+    }
+
+    int32_t eventType = AInputEvent_getType(pEvent);
+    switch (eventType) {
+        case AINPUT_EVENT_TYPE_MOTION:
+            return mInputHandler.onTouchEvent(pEvent);
+            break;
+
+        default:
+            break;
+    }
+
+    return 0;
 }
 
 void EventLoop::activate() {
