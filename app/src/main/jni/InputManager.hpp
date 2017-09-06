@@ -5,6 +5,7 @@
 #ifndef DROIDBLASTER_INPUTMANAGER_HPP
 #define DROIDBLASTER_INPUTMANAGER_HPP
 
+#include "Configuration.hpp"
 #include "GraphicsManager.hpp"
 #include "InputHandler.hpp"
 #include "Types.hpp"
@@ -27,6 +28,8 @@ protected:
     bool onTrackballEvent(AInputEvent *pEvent);
     bool onAccelerometerEvent(ASensorEvent *pEvent);
 
+    void toScreenCoord(screen_rot pRotation, ASensorVector* pCanonical, ASensorVector* pScreen);
+
 private:
     android_app *mApplication;
     GraphicsManager& mGraphicsManager;
@@ -36,6 +39,7 @@ private:
     float mDirectionX, mDirectionY;
     // Reference point to evaluate distance
     Location *mRefPoint;
+    screen_rot mRotation;
 };
 
 
