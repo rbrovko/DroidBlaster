@@ -6,6 +6,8 @@
 #include "Log.hpp"
 #include "Resource.hpp"
 
+#include <string>
+
 SoundManager::SoundManager(android_app *pApplication) :
         mApplication(pApplication),
         mEngine(NULL), mEngineObj(NULL),
@@ -137,17 +139,10 @@ status SoundManager::playBGM(Resource &pResource) {
     Log::info("Opening BGM %s", pResource.getPath());
 
     // setup BGM audio source
-    ResourceDescription descriptor = pResource.description();
-    if (descriptor.mDescription < 0) {
-        Log::info("Could not open BGM file");
-        return STATUS_KO;
-    }
-
-    SLDataLocator_AndroidFD dataLocatorIn;
-    dataLocatorIn.locatorType = SL_DATALOCATOR_ANDROIDFD;
-    dataLocatorIn.fd = descriptor.mDescription;
-    dataLocatorIn.offset = descriptor.mStart;
-    dataLocatorIn.length = descriptor.mLength;
+    SLDataLocator_URI dataLocatorIn;
+    std::string path = pResource.getPath();
+    dataLocatorIn.locatorType = SL_DATALOCATOR_URI;
+    dataLocatorIn.URI = (SLchar *)path.c_str();
 
     SLDataFormat_MIME dataFormat;
     dataFormat.formatType = SL_DATAFORMAT_MIME;

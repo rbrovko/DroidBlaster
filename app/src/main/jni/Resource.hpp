@@ -8,6 +8,8 @@
 #include "Types.hpp"
 
 #include <android_native_app_glue.h>
+#include <fstream>
+#include <string>
 
 struct ResourceDescription {
     int32_t mDescription;
@@ -19,21 +21,19 @@ class Resource {
 public:
     Resource(android_app *pApplication, const char *pPath);
 
-    const char* getPath() { return mPath; };
+    const char* getPath() { return mPath.c_str(); };
 
     status open();
     void close();
     status read(void* pBuffer, size_t pCount);
 
-    ResourceDescription description();
     off_t getLength();
 
     bool operator==(const Resource& pOther);
 
 private:
-    const char* mPath;
-    AAssetManager *mAssetManager;
-    AAsset *mAsset;
+    std::string mPath;
+    std::fstream mInputStream;
 };
 
 

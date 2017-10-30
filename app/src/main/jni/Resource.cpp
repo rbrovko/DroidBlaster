@@ -7,45 +7,35 @@
 #include <sys/stat.h>
 
 Resource::Resource(android_app *pApplication, const char *pPath) :
-        mPath(pPath),
-        mAssetManager(pApplication->activity->assetManager),
-        mAsset(NULL) {}
+        mPath(std::string("/sdcard/") + pPath),
+        mInputStream() {}
 
 status Resource::open() {
-    mAsset = AAssetManager_open(mAssetManager, mPath, AASSET_MODE_UNKNOWN);
+    mInputStream.open(mPath.c_str(), std::ios::in | std::ios::binary);
 
-    return (mAsset != NULL) ? STATUS_OK : STATUS_KO;
+    return mInputStream ? STATUS_OK : STATUS_KO;
 }
 
 void Resource::close() {
-    if (mAsset != NULL) {
-        AAsset_close(mAsset);
-        mAsset = NULL;
-    }
+    mInputStream.close();
 }
 
 status Resource::read(void *pBuffer, size_t pCount) {
-    int32_t readCount = AAsset_read(mAsset, pBuffer, pCount);
+    mInputStream.read((char *)pBuffer, pCount);
 
-    return (readCount == pCount) ? STATUS_OK : STATUS_KO;
-}
-
-ResourceDescription Resource::description() {
-    ResourceDescription lDescription = {-1, 0, 0};
-    AAsset *lAsset = AAssetManager_open(mAssetManager, mPath, AASSET_MODE_UNKNOWN);
-
-    if (lAsset != NULL) {
-        lDescription.mDescription = AAsset_openFileDescriptor(lAsset, &lDescription.mStart, &lDescription.mLength);
-        AAsset_close(lAsset);
-    }
-
-    return lDescription;
+    return (!mInputStream.fail()) ? STATUS_OK : STATUS_KO;
 }
 
 off_t Resource::getLength() {
-    return AAsset_getLength(mAsset);
+    struct stat filestatus;
+
+    if (stat(mPath.c_str(), &filestatus) >= 0) {
+        return  filestatus.st_size;
+    } else {
+        return -1;
+    }
 }
 
 bool Resource::operator==(const Resource &pOther) {
-    return !strcmp(mPath, pOther.mPath);
+    return mPath == pOther.mPath;
 }
