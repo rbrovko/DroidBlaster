@@ -4,8 +4,8 @@
 
 #include "Asteroid.hpp"
 
-static const float BOUNDS_MARGIN = 128;
-static const float MIN_VELOCITY = 150.0f, VELOCITY_RANGE = 600.0f;
+static const float BOUNDS_MARGIN = 128 / PHYSICS_SCALE;
+static const float MIN_VELOCITY = 150.0f / PHYSICS_SCALE, VELOCITY_RANGE = 600.0f / PHYSICS_SCALE;
 
 Asteroid::Asteroid(android_app *pApplication, TimeManager &pTimeManager,
                    GraphicsManager &pGraphicsManager, PhysicsManager &pPhysicsManager) :
@@ -18,43 +18,41 @@ Asteroid::Asteroid(android_app *pApplication, TimeManager &pTimeManager,
         mLeftBound(0.0f), mRightBound(0.0f) {}
 
 void Asteroid::registerAsteroid(Location &pLocation, int32_t pSizeX, int32_t pSizeY) {
-    mBodies.push_back(mPhysicsManager.loadBody(pLocation, pSizeX, pSizeY));
+    mBodies.push_back(mPhysicsManager.loadBody(pLocation, 0x1, 0x2, pSizeX, pSizeY, 2.0f));
 }
 
 void Asteroid::initialize() {
-    mMinBound = mGraphicsManager.getRenderHeight();
+    mMinBound = mGraphicsManager.getRenderHeight() / PHYSICS_SCALE;
     mUpperBound = mMinBound * 2;
     mLowerBound = -BOUNDS_MARGIN;
     mLeftBound = -BOUNDS_MARGIN;
-    mRightBound = (mGraphicsManager.getRenderWidth() + BOUNDS_MARGIN);
+    mRightBound = (mGraphicsManager.getRenderWidth() / PHYSICS_SCALE) + BOUNDS_MARGIN;
 
-    std::vector<PhysicsBody*>::iterator bodyIt;
+    std::vector<b2Body*>::iterator bodyIt;
     for (bodyIt = mBodies.begin(); bodyIt < mBodies.end(); ++bodyIt) {
         spawn(*bodyIt);
     }
 }
 
 void Asteroid::update() {
-    std::vector<PhysicsBody*>::iterator bodyIt;
+    std::vector<b2Body*>::iterator bodyIt;
     for (bodyIt = mBodies.begin(); bodyIt < mBodies.end(); ++bodyIt) {
-        PhysicsBody *body = *bodyIt;
+        b2Body *body = *bodyIt;
 
-        if ((body->location->x < mLeftBound) ||
-                (body->location->x > mRightBound) ||
-                (body->location->y < mLowerBound) ||
-                (body->location->y > mUpperBound)) {
+        if ((body->GetPosition().x < mLeftBound) ||
+                (body->GetPosition().x > mRightBound) ||
+                (body->GetPosition().y < mLowerBound) ||
+                (body->GetPosition().y > mUpperBound)) {
             spawn(body);
         }
     }
 }
 
-void Asteroid::spawn(PhysicsBody *pBody) {
+void Asteroid::spawn(b2Body *pBody) {
     float velocity = -(RAND(VELOCITY_RANGE) + MIN_VELOCITY);
-    float posX = RAND(mGraphicsManager.getRenderWidth());
-    float posY = RAND(mGraphicsManager.getRenderHeight()) + mGraphicsManager.getRenderHeight();
+    float posX = mLeftBound + RAND(mRightBound - mLeftBound);
+    float posY = mMinBound + RAND(mUpperBound - mMinBound);
 
-    pBody->velocityX = 0.0f;
-    pBody->velocityY = velocity;
-    pBody->location->x = posX;
-    pBody->location->y = posY;
+    pBody->SetTransform(b2Vec2(posX, posY), 0.0f);
+    pBody->SetLinearVelocity(b2Vec2(0.0f, velocity));
 }
