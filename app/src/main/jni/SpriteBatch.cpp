@@ -10,9 +10,9 @@
 SpriteBatch::SpriteBatch(TimeManager &pTimeManager, GraphicsManager &pGraphicsManager):
         mTimeManager(pTimeManager),
         mGraphicsManager(pGraphicsManager),
-        mSprites(), mSpriteCount(0),
-        mVertices(), mVertexCount(0),
-        mIndexes(), mIndexCount(0),
+        mSprites(),
+        mVertices(),
+        mIndexes(),
         mShaderProgram(0),
         aPosition(-1), aTexture(-1),
         uProjection(-1), uTexture(-1) {
@@ -20,28 +20,32 @@ SpriteBatch::SpriteBatch(TimeManager &pTimeManager, GraphicsManager &pGraphicsMa
 }
 
 SpriteBatch::~SpriteBatch() {
-    for (int32_t i = 0; i < mSpriteCount; ++i) {
-        delete mSprites[i];
+    std::vector<Sprite*>::iterator spriteIt;
+    for (spriteIt = mSprites.begin(); spriteIt < mSprites.end(); ++spriteIt) {
+        delete (*spriteIt);
     }
 }
 
 Sprite* SpriteBatch::registerSprite(Resource &pTextureResource, int32_t pHeight, int32_t pWidth) {
-    int32_t spriteCount = mSpriteCount;
+    int32_t spriteCount = mSprites.size();
     int32_t index = spriteCount * 4; // points to 1st vertex
 
     // Precomputes the index buffer
-    GLushort* indexes = (&mIndexes[0]) + spriteCount * 6;
-    mIndexes[mIndexCount++] = index + 0;
-    mIndexes[mIndexCount++] = index + 1;
-    mIndexes[mIndexCount++] = index + 2;
-    mIndexes[mIndexCount++] = index + 2;
-    mIndexes[mIndexCount++] = index + 1;
-    mIndexes[mIndexCount++] = index + 3;
+    mIndexes.push_back(index + 0);
+    mIndexes.push_back(index + 1);
+    mIndexes.push_back(index + 2);
+    mIndexes.push_back(index + 2);
+    mIndexes.push_back(index + 1);
+    mIndexes.push_back(index + 3);
+
+    for (int i = 0; i < 4; ++i) {
+        mVertices.push_back(Sprite::Vertex());
+    }
 
     // Appends a new sprite to the sprite array
-    mSprites[mSpriteCount] = new Sprite(mGraphicsManager, pTextureResource, pHeight, pWidth);
+    mSprites.push_back(new Sprite(mGraphicsManager, pTextureResource, pHeight, pWidth));
 
-    return mSprites[mSpriteCount++];
+    return mSprites.back();
 }
 
 // shaders GLSL
@@ -80,8 +84,9 @@ status SpriteBatch::load() {
     uTexture = glGetUniformLocation(mShaderProgram, "uTexture");
 
     // Loads sprites
-    for (int32_t i = 0; i < mSpriteCount; ++i) {
-        if (mSprites[i]->load(mGraphicsManager) != STATUS_OK) {
+    std::vector<Sprite*>::iterator spriteIt;
+    for (spriteIt = mSprites.begin(); spriteIt < mSprites.end(); ++spriteIt) {
+        if ((*spriteIt)->load(mGraphicsManager) != STATUS_OK) {
             goto ERROR;
         }
     }
@@ -126,7 +131,7 @@ void SpriteBatch::draw() {
     const int32_t vertexPerSprite = 4;
     const int32_t indexPerSprite = 6;
     float timeStep = mTimeManager.elapsed();
-    int32_t spriteCount = mSpriteCount;
+    int32_t spriteCount = mSprites.size();
     int32_t currentSprite = 0, firstSprite = 0;
 
     while (bool canDraw = (currentSprite < spriteCount)) {

@@ -10,6 +10,8 @@
 #include "TimeManager.hpp"
 #include "Types.hpp"
 
+#include <vector>
+
 class Asteroid {
 public:
     Asteroid(android_app *pApplication,
@@ -29,8 +31,8 @@ private:
     GraphicsManager& mGraphicsManager;
     PhysicsManager& mPhysicsManager;
 
-    PhysicsBody* mBodies[1024];
-    int32_t mBodyCount;
+    std::vector<PhysicsBody*> mBodies;
+
     float mMinBound;
     float mUpperBound;
     float mLowerBound;

@@ -10,6 +10,8 @@
 #include "TimeManager.hpp"
 #include "Types.hpp"
 
+#include <vector>
+
 class SpriteBatch : public GraphicsComponent {
 public:
     SpriteBatch(TimeManager& pTimeManager, GraphicsManager& pGraphicsManager);
@@ -27,14 +29,9 @@ private:
     TimeManager& mTimeManager;
     GraphicsManager& mGraphicsManager;
 
-    Sprite* mSprites[1024];
-    int32_t mSpriteCount;
-
-    Sprite::Vertex mVertices[1024];
-    int32_t mVertexCount;
-
-    GLushort mIndexes[1024];
-    int32_t mIndexCount;
+    std::vector<Sprite*> mSprites;
+    std::vector<Sprite::Vertex> mVertices;
+    std::vector<GLushort> mIndexes;
 
     GLuint mShaderProgram;
     GLuint aPosition, aTexture;

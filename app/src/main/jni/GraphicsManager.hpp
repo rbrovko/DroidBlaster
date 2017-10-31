@@ -12,6 +12,9 @@
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 
+#include <vector>
+#include <map>
+
 class GraphicsComponent {
 public:
     virtual status load() = 0;
@@ -19,7 +22,6 @@ public:
 };
 
 struct TextureProperties {
-    Resource *textureResource;
     GLuint  texture;
     int32_t width;
     int32_t height;
@@ -76,17 +78,10 @@ private:
     GLfloat mProjectionMatrix[4][4];
 
     // Graphics resources
-    TextureProperties mTextures[32];
-    int32_t mTextureCount;
-
-    GLuint mShaders[32];
-    int32_t mShaderCount;
-
-    GLuint mVertexBuffers[32];
-    int32_t mVertexBufferCount;
-
-    GraphicsComponent* mComponents[32];
-    int32_t mComponentCount;
+    std::map<Resource*, TextureProperties> mTextures;
+    std::vector<GLuint> mShaders;
+    std::vector<GLuint> mVertexBuffers;
+    std::vector<GraphicsComponent*> mComponents;
 
     // Rendering resources
     GLint mScreenFrameBuffer;
